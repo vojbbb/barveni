@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pravidla přírodního barvení</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Barvení">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#2f3f8f">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<style>html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: kalkulačka nahoře (vstup vlevo, výsledek vpravo), pod ní pravidla jako číslovaný sešit karet, tabulka receptů a zkratky. */
+:root{
+  --bg:#f6f7f4; --surface:#ffffff; --fg:#1d2420; --muted:#5d6862; --line:#d9ded8;
+  --indigo:#2f3f8f; --indigo-soft:#e6e9f6; --cassia:#9a7b12; --cassia-soft:#f6efd6;
+  --henna:#a4432a; --henna-soft:#f7e4dd; --ok:#2f7a4d;
+  --f-display:"Young Serif", Georgia, serif;
+  --f-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#141917; --surface:#1c2320; --fg:#e7ebe8; --muted:#9aa6a0; --line:#2f3934;
+  --indigo:#9fb0ff; --indigo-soft:#232a4a; --cassia:#e2c25a; --cassia-soft:#352d12;
+  --henna:#f0957a; --henna-soft:#3c2219; --ok:#7fd3a0; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#141917; --surface:#1c2320; --fg:#e7ebe8; --muted:#9aa6a0; --line:#2f3934;
+  --indigo:#9fb0ff; --indigo-soft:#232a4a; --cassia:#e2c25a; --cassia-soft:#352d12;
+  --henna:#f0957a; --henna-soft:#3c2219; --ok:#7fd3a0; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55;padding-inline:16px;padding-block:28px 64px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(28px,4.5vw,42px)}
+h2{font-size:26px}
+h3{font-size:19px}
+p{margin:0}
+.lede{color:var(--muted);max-width:68ch;margin-top:10px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--indigo)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+header{display:flex;flex-direction:column;gap:6px}
+.stats{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:14px;font-size:14px;color:var(--muted)}
+.stats b{color:var(--fg);font-family:var(--f-mono);font-weight:500}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start}
+@media (max-width:820px){.calc{grid-template-columns:minmax(0,1fr)}}
+.panel{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px}
+form{display:flex;flex-direction:column;gap:16px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;min-width:0}
+legend,label.lbl{font-size:13px;font-weight:600;color:var(--muted);padding:0;margin-bottom:4px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:14px;cursor:pointer;background:var(--bg);user-select:none}
+.seg input:checked+label{background:var(--indigo);border-color:var(--indigo);color:var(--surface)}
+.seg input:focus-visible+label{outline:2px solid var(--indigo);outline-offset:2px}
+.range{display:flex;align-items:center;gap:10px}
+.range input{flex:1;accent-color:var(--indigo)}
+.range output{width:48px;text-align:right}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:440px){.two{grid-template-columns:1fr}}
+
+.result{display:flex;flex-direction:column;gap:16px}
+.total{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.total .big{font-family:var(--f-display);font-size:44px;line-height:1}
+.total small{color:var(--muted)}
+.mixes{display:flex;flex-direction:column;gap:10px}
+.mix{border-left:3px solid var(--indigo);padding:6px 0 6px 12px}
+.mix.len{border-color:var(--cassia)}
+.mix.pre{border-color:var(--henna)}
+.mix h4{margin:0 0 4px;font-size:14px;font-weight:600}
+.mix .line{font-family:var(--f-mono);font-size:14px}
+.warn{background:var(--henna-soft);color:var(--fg);border-radius:8px;padding:10px 12px;font-size:14px}
+.warn b{color:var(--henna)}
+.tip{background:var(--cassia-soft);border-radius:8px;padding:10px 12px;font-size:14px}
+.formula{background:var(--indigo-soft);border-radius:8px;padding:12px 14px;font-family:var(--f-mono);font-size:13px;overflow-x:auto;white-space:pre}
+.note{font-size:13px;color:var(--muted)}
+
+/* rules */
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:820px){.rules{grid-template-columns:minmax(0,1fr)}}
+.rule{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.rule .num{font-family:var(--f-mono);font-size:12px;color:var(--indigo)}
+.rule ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.rule li{max-width:65ch}
+.ref{font-family:var(--f-mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.eq{font-family:var(--f-mono);font-size:13.5px;background:var(--indigo-soft);border-radius:6px;padding:8px 10px;overflow-x:auto;white-space:pre}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:720px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.m{font-family:var(--f-mono);font-size:13px;white-space:nowrap}
+.chip{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;background:var(--indigo-soft);color:var(--indigo);white-space:nowrap}
+.chip.h{background:var(--henna-soft);color:var(--henna)}
+.chip.c{background:var(--cassia-soft);color:var(--cassia)}
+
+dl.abbr{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,1fr);gap:6px 16px;margin:0;font-size:14px}
+dl.abbr dt{overflow-wrap:anywhere;font-family:var(--f-mono);font-weight:500}
+dl.abbr dd{overflow-wrap:anywhere;margin:0;color:var(--muted)}
+section{display:flex;flex-direction:column;gap:16px}
+@media (max-width:480px){dl.abbr{grid-template-columns:minmax(0,1fr)}dl.abbr dd{margin-bottom:6px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="eyebrow">Výtah z karet klientek · přírodní barvy</span>
+  <h1>Pravidla přírodního barvení</h1>
+  <p class="lede">Z každé karty je vypsaný výchozí stav vlasů, směs, poměr, gramy, výsledek a poznámka „příště“. Pravidla níže jsou to, co se opakuje napříč klientkami. Kalkulačka z nich skládá orientační směs. Je to souhrn praxe z karet, ne náhrada úsudku u křesla.</p>
+  <div class="stats">
+    <span><b>260</b> fotek karet</span>
+    <span><b>100+</b> klientek</span>
+    <span><b>2014–2026</b> zápisy</span>
+  </div>
+</header>
+
+<section aria-labelledby="calc-h">
+  <h2 id="calc-h">Kalkulačka směsi</h2>
+  <div class="calc">
+    <div class="panel">
+      <form id="f" autocomplete="off">
+        <fieldset><legend>Délka vlasů</legend>
+          <div class="seg">
+            <input type="radio" name="len" id="len-k" value="k"><label for="len-k">krátké / pixie</label>
+            <input type="radio" name="len" id="len-m" value="m" checked><label for="len-m">mikádo / po ramena</label>
+            <input type="radio" name="len" id="len-d" value="d"><label for="len-d">dlouhé</label>
+          </div></fieldset>
+        <fieldset><legend>Hustota a struktura</legend>
+          <div class="seg">
+            <input type="radio" name="dens" id="dens-j" value="j"><label for="dens-j">jemné / řídké</label>
+            <input type="radio" name="dens" id="dens-n" value="n" checked><label for="dens-n">normální</label>
+            <input type="radio" name="dens" id="dens-h" value="h"><label for="dens-h">husté / hrubé</label>
+          </div></fieldset>
+        <fieldset><legend>Co se barví</legend>
+          <div class="seg">
+            <input type="radio" name="scope" id="sc-o" value="o"><label for="sc-o">jen odrost</label>
+            <input type="radio" name="scope" id="sc-od" value="od" checked><label for="sc-od">odrost + délky</label>
+            <input type="radio" name="scope" id="sc-c" value="c"><label for="sc-c">celé vlasy</label>
+          </div></fieldset>
+        <div class="two">
+          <fieldset><label class="lbl" for="gf">Šediny vpředu / temeno</label>
+            <div class="range"><input type="range" id="gf" min="0" max="100" step="10" value="80"><output id="gfo" class="mono" for="gf">80 %</output></div></fieldset>
+          <fieldset><label class="lbl" for="gb">Šediny vzadu / spodek</label>
+            <div class="range"><input type="range" id="gb" min="0" max="100" step="10" value="50"><output id="gbo" class="mono" for="gb">50 %</output></div></fieldset>
+        </div>
+        <fieldset><label class="lbl" for="lv">Vlastní tmavost (bez šedin)</label>
+          <div class="range"><input type="range" id="lv" min="2" max="9" step="1" value="5"><output id="lvo" class="mono" for="lv">5</output></div></fieldset>
+        <fieldset><legend>Cíl</legend>
+          <div class="seg">
+            <input type="radio" name="tg" id="tg-b" value="b" checked><label for="tg-b">zlatá blond</label>
+            <input type="radio" name="tg" id="tg-s" value="s"><label for="tg-s">studená / popelavá</label>
+            <input type="radio" name="tg" id="tg-h" value="h"><label for="tg-h">hnědá</label>
+            <input type="radio" name="tg" id="tg-r" value="r"><label for="tg-r">měděná / jahodová</label>
+            <input type="radio" name="tg" id="tg-t" value="t"><label for="tg-t">tmavá / černá</label>
+          </div></fieldset>
+        <fieldset><legend>Předchozí barvení</legend>
+          <div class="seg">
+            <input type="radio" name="hist" id="hi-n" value="n" checked><label for="hi-n">nebarvené / přírodní</label>
+            <input type="radio" name="hist" id="hi-c" value="c"><label for="hi-c">chemie tmavá</label>
+            <input type="radio" name="hist" id="hi-o" value="o"><label for="hi-o">odbarvené / melír</label>
+            <input type="radio" name="hist" id="hi-x" value="x"><label for="hi-x">henna</label>
+          </div></fieldset>
+      </form>
+    </div>
+    <div class="panel result" aria-live="polite" id="out"></div>
+  </div>
+</section>
+
+<section aria-labelledby="eq-h">
+  <h2 id="eq-h">Rovnice, ze kterých kalkulačka počítá</h2>
+  <div class="rules">
+    <div class="rule">
+      <span class="num">ROVNICE 1 · GRAMÁŽ</span>
+      <div class="eq">G = Z × k  (+ D)
+
+Z  jen odrost:      krátké 20 g · ostatní 30 g
+   celé vlasy:      krátké 35 · ramena 45 · dlouhé 65 g
+k  jemné/řídké 0,7 · normální 1 · husté 1,3
+D  délky (zbytek směsi + cassia):
+   krátké +5 · ramena +10 · dlouhé +15–20 g</div>
+      <p class="note">Nejčastější zápis na odrost je 30 g (18×), pak 25 g a 35 g. Velký odrost nebo hodně šedin 50–60 g. „Na dlouhé vlasy +50 g“ (kar. 135), dlouhé husté „90 g!“ (kar. 2), hodně husté mikádo 50 g → „stačí 35 g“ (kar. 206).</p>
+    </div>
+    <div class="rule">
+      <span class="num">ROVNICE 2 · PODÍL TMAVŠÍ SLOŽKY</span>
+      <div class="eq">t = 1 − S      (omezeno na 0 až 0,5)
+
+S  podíl šedin v dané zóně (0,8 = 80 %)
+t  podíl hnědé/tmavší barvy ve směsi
+   zbytek (1 − t) je světlá/zlatá barva</div>
+      <p class="note">Platí pro cestu do světla. Vpředu bílé (S ≈ 1) → čistá světlá (BLONDHELL 03, GOLDBLOND 01). Vzadu 50 % → světlá : hnědá 1 : 1. 80 % → asi 4 : 1, v praxi „špetka sv. hnědé“. Odvozeno ze zónových karet 7, 72–75, 84–91, 176–178, 219–221, 232, 240.</p>
+    </div>
+    <div class="rule">
+      <span class="num">ROVNICE 3 · UTLUMENÍ</span>
+      <div class="eq">barva : neutral (cassia) = 3 : 1  mírně
+                         = 2 : 1  středně
+                         = 1 : 1  skráně, jemné vlasy
+indigo  ≈ 5 % směsi  (2 g na 30 g) proti rezavé</div>
+      <p class="note">Kar. 18 „GOLDEN BL. + NEUTRAL 2:1 – OK“, kar. 120 skráně „2:1 s cassií – OK“, kar. 118 a 119 S13 31 g + indigo 2 g, kar. 213 indigo 2 g na 30 g.</p>
+    </div>
+    <div class="rule">
+      <span class="num">ROVNICE 4 · POSTUPNÉ ZESVĚTLENÍ</span>
+      <div class="eq">každá návštěva:  ¼ hnědé → nahradit světlou/neutralem
+barvit jen odrost, délky nechat vymýt
+3–4 návštěvy na přechod hnědá → zlatá blond</div>
+      <p class="note">Kar. 10 „přidávat ¼ NEUTRAL“, kar. 17–18 sv. hnědá → golden blond → + neutral, kar. 16 golden blond 2:1 → 3:1 → jen golden blond, kar. 192 „postupně přejít“.</p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="r-h">
+  <h2 id="r-h">Pravidla, která se opakují</h2>
+  <div class="rules">
+    <div class="rule">
+      <span class="num">01 · ŠEDINY ROZHODUJÍ O CESTĚ</span>
+      <h3>Čím víc šedin, tím méně jde čistá hnědá</h3>
+      <ul>
+        <li><b>0–10 %</b>: jen tónování a oživení. S13, SAND, JAHODA nebo byliny Khadi. Bez šedin S13 + JAHODA 4 : 3 nebo 35 : 15 g → hezká béžová. <span class="ref">kar. 11, 55</span></li>
+        <li><b>10–30 %</b>: stačí jedna barva nebo 2 složky. SAND 45 + SV.HN.KH 5, HENNA + HAZEL 1 : 1. <span class="ref">kar. 130, 51</span></li>
+        <li><b>50–70 %</b>: hnědá potřebuje základ. KH SV.HN 20 + STŘ.HN 10 (+ cassia 5), KH HAZEL 42 + CB BROWN 8, HENNA + OŘECH 2 : 1. <span class="ref">kar. 40–44, 26, 131–134</span></li>
+        <li><b>80–100 %</b>: buď jít do světla (BLONDHELL 03, GOLDBLOND 01, N09, NA07/NA08 + ocet), nebo nejdřív předpigmentovat hennou. <span class="ref">kar. 225, 189, 183</span></li>
+      </ul>
+    </div>
+    <div class="rule">
+      <span class="num">02 · ZELENÁ NA BÍLÝCH</span>
+      <h3>Hnědá přímo na bílé vlasy zezelená</h3>
+      <ul>
+        <li>Zapsáno 6× „zelené“: hazel, sv. hnědá i ořech + neutral na 80–100 % šedin. <span class="ref">kar. 21, 28, 98, 99, 195</span></li>
+        <li>Řešení: předpigmentace HENNA + ROT INTENSIV 1 : 1, 45 min, pak hnědá/černá + indigo 3 : 1, celkem 1,5 h. „OK, hezky ztmavlo.“ <span class="ref">kar. 183</span></li>
+        <li>Lehčí varianta: přimíchat hennu nebo červenou (~⅓) přímo do hnědé. HENNA 35 + ROT INT 15 „sjednotilo se“. <span class="ref">kar. 28, 20</span></li>
+      </ul>
+    </div>
+    <div class="rule">
+      <span class="num">03 · ZÓNOVÁNÍ</span>
+      <h3>Vpředu světlejší, vzadu stejná směs + hnědá</h3>
+      <ul>
+        <li>Nejčastější vzorec u šedých: vpředu jen světlá složka, vzadu totéž + hnědá 1 : 1 (ZL.HN.KH, SV.HN.KH nebo SAND). <span class="ref">kar. 84–91, 176–177</span></li>
+        <li>U obličeje a na skráních se barva chytá víc: přidat cassii 1 : 1 nebo 2 : 1, nebo „lžička směsi + ½ lžičky cassie“. <span class="ref">kar. 118, 232</span></li>
+        <li>Kruh na temeni nebo tmavá spodní část zvlášť: NA06 jen tam. <span class="ref">kar. 116, 90</span></li>
+        <li>Šedé pruhy vpředu: stačí barvit jen „křídla“, ne celou hlavu. <span class="ref">kar. 240</span></li>
+      </ul>
+    </div>
+    <div class="rule">
+      <span class="num">04 · DÉLKY</span>
+      <h3>Na délky jde zbytek směsi s cassií</h3>
+      <ul>
+        <li>Standard: odrost barvou, do délek zbytek + CASSIA 10–15 g (dlouhé až 20 g). Cassia dává lesk bez barvy. <span class="ref">kar. 22, 40, 207, 260</span></li>
+        <li>Když jsou délky moc výrazné nebo tmavé: několik návštěv jen odrost a nechat vymýt. <span class="ref">kar. 118, 223</span></li>
+        <li>Po létě a moři vyšisované: tehdy znovu celé vlasy. <span class="ref">kar. 76, 178, 201</span></li>
+        <li>Odbarvené a melírované délky berou moc. Na ně neutral nebo světlá + cassia. <span class="ref">kar. 203, 108</span></li>
+      </ul>
+    </div>
+    <div class="rule">
+      <span class="num">05 · KOREKCE PODLE VÝSLEDKU</span>
+      <h3>Co dělat, když to vyšlo jinak</h3>
+      <ul>
+        <li><b>Moc výrazné / oranžové</b>: přidat neutral nebo cassii, ubrat hennu, přidat hnědou. HENNA + ROT 4 : 1 → HENNA 30 + BLOND 5. <span class="ref">kar. 209</span></li>
+        <li><b>Rezavé</b>: špetka indiga, jen v horní polovině. <span class="ref">kar. 231</span></li>
+        <li><b>Do růžova</b> po NA06 + ocet na bílých → přejít na NA07. <span class="ref">kar. 187, 89</span></li>
+        <li><b>Málo výrazné</b>: přidat jahodu, henna nebo ROT, prodloužit čas. Tm. hnědá + violet 3 h místo 1 h. <span class="ref">kar. 247</span></li>
+        <li><b>Moc zlaté</b>: k GOLDBLOND 01 přidat BLONDHELL 03 (1 : 2) nebo N09 (2 : 1). <span class="ref">kar. 197, 199</span></li>
+      </ul>
+    </div>
+    <div class="rule">
+      <span class="num">06 · STRUKTURA VLASŮ</span>
+      <h3>Jemné berou víc, husté potřebují víc gramů</h3>
+      <ul>
+        <li>Velmi jemné a krátké: stačí 15 g, vpředu „svítí“, proto utlumit tmavší nebo cassií. <span class="ref">kar. 129, 160, 182</span></li>
+        <li>Husté a hrubé: víc gramů a delší působení, často pod sušákem. <span class="ref">kar. 2, 206, 123</span></li>
+        <li>Méně vlasů (vypadávání) = méně barvy: 40 g → 30 g. <span class="ref">kar. 162</span></li>
+        <li>Mastné vlasy: byliny Khadi. Suché konce: cassia a olej, ne henna. <span class="ref">kar. 180, 12</span></li>
+      </ul>
+    </div>
+    <div class="rule">
+      <span class="num">07 · TEPLÁ × STUDENÁ</span>
+      <h3>Studenou dělá popel, indigo a ocet</h3>
+      <ul>
+        <li>Studená hnědá: ASH BROWN (+ cassia 3 : 1), BRAUN 120 + NA06 2 : 1, BRAUN 120 + GOLD.BR.KH 30 : 5. <span class="ref">kar. 236, 249, 222</span></li>
+        <li>Studená světlá na šedinách: NA07 nebo NA08 + ocet. „Hezká studená“ BLONDHELL 03. <span class="ref">kar. 223, 225, 244</span></li>
+        <li>Teplá: GOLDBLOND, SUNRISE, JAHODA, COPPER, henna. „Chytlo do studena → příště teplejší GOLDBLOND.“ <span class="ref">kar. 68</span></li>
+      </ul>
+    </div>
+    <div class="rule">
+      <span class="num">08 · PŘEDCHOZÍ CHEMIE</span>
+      <h3>Z chemie přes hennu, odrost zvlášť</h3>
+      <ul>
+        <li>Tmavá chemie v délkách: barvit jen odrost, délky nechat vymýt. Na délky hennu nebo červenou, ne hnědou. <span class="ref">kar. 12, 28, 33</span></li>
+        <li>Fialová nebo černá chemie + 80 % šedin: TM.HN.KH 18 + ROT INT 12 + ČERNÁ 5, délky GOLD-KUPF 20 + CASSIA 10, celkem 70 g. <span class="ref">kar. 33</span></li>
+        <li>Ztmavení přes hennu: OŘECH 30 + MED.BROWN 20 „hezky ztmavlo“, občas znovu předpigmentovat hennou. <span class="ref">kar. 250</span></li>
+      </ul>
+    </div>
+    <div class="rule">
+      <span class="num">09 · ČAS A DOMÁCÍ BARVENÍ</span>
+      <h3>Hodina je základ, šediny a tmavé déle</h3>
+      <ul>
+        <li>Běžně 1 h, golden blond 1–1,5 h, tmavá + violet na krytí až 3 h, předpigmentace 45 min. <span class="ref">kar. 18, 246, 247, 183</span></li>
+        <li>„Doma nechytlo“ = nedala kondicionér k hlavě, umyla vlasy barevným šamponem nebo nechala krátce. <span class="ref">kar. 16, 79, 190</span></li>
+        <li>Domů dávat stejnou směs jen na odrost, 30–50 g. <span class="ref">kar. 204–207</span></li>
+      </ul>
+    </div>
+    <div class="rule">
+      <span class="num">10 · ALERGIE A POKOŽKA</span>
+      <h3>Svědění si zapisovat</h3>
+      <ul>
+        <li>Svědění po barvě se opakovalo u S13, měděné hnědé CB, KH tm. hnědé. Pomohl olej 2 týdny, u jedné klientky ořechové tonikum. <span class="ref">kar. 80, 83, 191</span></li>
+        <li>Alergie na pšenici a žito: pozor na barvy Oliebe. <span class="ref">kar. 161</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="t-h">
+  <h2 id="t-h">Osvědčené směsi podle situace</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Výchozí stav</th><th>Cíl</th><th>Směs</th><th>Poměr / gramy</th><th>Karta</th></tr></thead>
+      <tbody>
+        <tr><td>přír. 6, bez šedin, jemné</td><td><span class="chip">béžová</span></td><td>S13 + JAHODA</td><td class="m">35 + 15 g</td><td class="m">55</td></tr>
+        <tr><td>tm. 4–5, 20 % šedin, nebarvené</td><td><span class="chip">zlatohnědá</span></td><td>SAND + SV.HN.KH</td><td class="m">45 + 5 g</td><td class="m">130</td></tr>
+        <tr><td>tm. 4, 50 % šedin, chemie</td><td><span class="chip">hnědá</span></td><td>MĚĎ.HNĚDÁ + VIOLET</td><td class="m">25 + 10 g</td><td class="m">36</td></tr>
+        <tr><td>dlouhé, 70 % šedin, dříve henna</td><td><span class="chip">hnědá</span></td><td>KH HAZEL + CB BROWN</td><td class="m">42 + 8 g</td><td class="m">26</td></tr>
+        <tr><td>šediny, sv. hnědá (dlouhodobě)</td><td><span class="chip">hnědá</span></td><td>KH SV.HN + KH STŘ.HN (+ CASSIA)</td><td class="m">20 + 10 (+5) g</td><td class="m">40–44</td></tr>
+        <tr><td>vpředu bílé, vzadu 50 %</td><td><span class="chip c">zlatá blond</span></td><td>vpředu GOLDBLOND 01 · vzadu GB 01 + ZL.HN.KH</td><td class="m">15 g · 10 + 10 g</td><td class="m">85–86</td></tr>
+        <tr><td>vpředu bílé, vzadu 50 %</td><td><span class="chip c">světlá</span></td><td>vpředu BLONDHELL 03 · vzadu BLHELL 03 + SAND</td><td class="m">10 g · 1 : 1</td><td class="m">176–177</td></tr>
+        <tr><td>100 % šedin po chemoterapii, krátké</td><td><span class="chip">studená světlá</span></td><td>NA08 + ocet</td><td class="m">20 g celé</td><td class="m">225</td></tr>
+        <tr><td>80 % šedin, chem. černá, dlouhé</td><td><span class="chip">tmavá</span></td><td>předpig. HENNA + ROT INT → ČERNÁ + INDIGO</td><td class="m">1 : 1 · 3 : 1</td><td class="m">183</td></tr>
+        <tr><td>šediny, chce měď</td><td><span class="chip h">měděná</span></td><td>ROT INTENSIV + ST.HN.KH</td><td class="m">24 + 11 g (2 : 1)</td><td class="m">205</td></tr>
+        <tr><td>odrost, chce jahodovou</td><td><span class="chip h">jahodová</span></td><td>JAHODA + HENNA</td><td class="m">2 : 1 až 1 : 1 (30 g)</td><td class="m">111–113</td></tr>
+        <tr><td>jahodová byla moc výrazná</td><td><span class="chip h">jahodová tlumená</span></td><td>JAHODA + HAJ + NA06</td><td class="m">15 + 3 + 6 g</td><td class="m">254, 256</td></tr>
+        <tr><td>tmavé, vyšisované</td><td><span class="chip">tmavá</span></td><td>TM.HNĚDÁ + VIOLET, 3 h</td><td class="m">25 + 5 g</td><td class="m">247</td></tr>
+        <tr><td>tmavá, chce tmavší</td><td><span class="chip">tmavá</span></td><td>TM.HN.KH + INDIGO CB</td><td class="m">20 + 15 g</td><td class="m">170</td></tr>
+        <tr><td>50 % šedin, studená</td><td><span class="chip">studená hnědá</span></td><td>BRAUN 120 + GOLD.BR.KH</td><td class="m">30 + 5 g</td><td class="m">222</td></tr>
+        <tr><td>odrost vs. černé konce</td><td><span class="chip">studená hnědá</span></td><td>ASH BROWN + BRAUN 120 + CASSIA</td><td class="m">20 + 10 + 10 g</td><td class="m">235</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section aria-labelledby="a-h">
+  <h2 id="a-h">Zkratky z karet</h2>
+  <div class="panel">
+    <dl class="abbr">
+      <dt>KH</dt><dd>Khadi (SV.HN, STŘ.HN, TM.HN, OŘECH, HAZEL, ASH BROWN, ZL.HN, MĚDĚNÁ, SLUNEČNÍ BL, CASSIA, HENNA, INDIGO, BYLINY)</dd>
+      <dt>CB, CSMB</dt><dd>Cosmebio (GOLDEN BLOND, TM.HN, ČERNÁ, INDIGO, COPPER BROWN, VIOLET)</dd>
+      <dt>O, OL</dt><dd>Oliebe (GOLDBLOND 01, BLOND 02, BLONDHELL 03, GOLD A05, N07, N09, NA06–NA08)</dd>
+      <dt>S12, S13, SAND, JAHODA, BRAUN 110/120, 11M</dt><dd>označení tak, jak jsou psaná na kartách</dd>
+      <dt>HAJ, H+A</dt><dd>henna + amla (+ jahoda), podle kontextu</dd>
+      <dt>F, DIFU</dt><dd>foukaná, difuzér</dd>
+    </dl>
+    <p class="note" style="margin-top:12px">Pár slov na kartách bylo nečitelných, ta v pravidlech nejsou. Jména a telefony klientek tu nejsou, odkazy „kar.“ jsou čísla fotek v pořadí, jak jdou časově ve složce.</p>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+  const f=document.getElementById('f'), out=document.getElementById('out');
+  const v=n=>{const el=f.querySelector('input[name="'+n+'"]:checked');return el?el.value:null};
+  const r5=x=>Math.max(5,Math.round(x/5)*5);
+  const pct=x=>Math.round(x*100);
+  function split(total, parts){ // parts: [[name, weight],...]
+    const sum=parts.reduce((a,p)=>a+p[1],0);
+    return parts.map(p=>p[0]+' '+Math.max(1,Math.round(total*p[1]/sum))+' g').join(' + ');
+  }
+  function calc(){
+    const len=v('len'), dens=v('dens'), scope=v('scope'), tg=v('tg'), hist=v('hist');
+    const gf=+document.getElementById('gf').value/100, gb=+document.getElementById('gb').value/100;
+    const lv=+document.getElementById('lv').value;
+    document.getElementById('gfo').textContent=pct(gf)+' %';
+    document.getElementById('gbo').textContent=pct(gb)+' %';
+    document.getElementById('lvo').textContent=lv;
+    const k={j:.7,n:1,h:1.3}[dens];
+    let Z, D=0;
+    if(scope==='c'){Z={k:35,m:45,d:65}[len]}
+    else{Z=len==='k'?20:30; if(scope==='od'){D={k:5,m:10,d:17.5}[len]}}
+    const main=r5(Z*k), lenG=D?r5(D*(dens==='h'?1.3:1)):0;
+    const S=Math.max(gf,gb), zoned=Math.abs(gf-gb)>=0.3;
+    const warns=[], tips=[], mixes=[];
+    let pre=null, time='60 min';
+
+    const tFront=Math.min(.5,Math.max(0,1-gf)), tBack=Math.min(.5,Math.max(0,1-gb));
+    if(tg==='b'){
+      const light = S>=.7 ? 'BLONDHELL 03' : 'GOLDBLOND 01';
+      const dark = lv<=4 ? 'ZL.HN.KH' : 'SAND';
+      if(zoned){
+        const fg=r5(main*.45), bg=main-fg;
+        mixes.push(['Vpředu / temeno', tFront<.08? light+' '+fg+' g' : split(fg,[[light,1-tFront],[dark,tFront]])]);
+        mixes.push(['Vzadu / spodek', split(bg,[[light,1-tBack],[dark,tBack]])]);
+      } else {
+        const t=Math.min(.5,Math.max(0,1-S));
+        mixes.push(['Odrost', t<.08? light+' '+main+' g' : split(main,[[light,1-t],[dark,t]])]);
+      }
+      if(lv<=4 && S<.5) warns.push('<b>Přírodní barva nezesvětlí.</b> Na tmavé 3–4 golden blond jen dodá zlatý odlesk. Zesvětlovat postupně a barvit jen odrost.');
+      if(S>=.7) tips.push('Když vyjde moc do zlata, přidej BLONDHELL 03 (GB 01 : BH 03 = 1 : 2) nebo N09 (2 : 1).');
+    }
+    if(tg==='s'){
+      if(S>=.7 && lv>=5){
+        mixes.push(['Odrost', (S>=.9?'NA07':'NA07 + NA06 2 : 1')+' + lžíce octa, '+main+' g']);
+        warns.push('<b>NA06 + ocet na bílých šlo do růžova</b> (kar. 187). Na čistě bílé začni NA07 nebo NA08.');
+      } else if(lv<=5){
+        mixes.push(['Odrost', split(main,[['ASH BROWN KH',3],['CASSIA',1]])]);
+        tips.push('Hnědá studená bez popele: BRAUN 120 + NA06 2 : 1, nebo BRAUN 120 30 g + GOLD.BR.KH 5 g.');
+      } else {
+        mixes.push(['Odrost', split(main,[['BLONDHELL 03',2],['N09',1]])]);
+      }
+      tips.push('Rezavý nádech ztlumí špetka indiga, asi 2 g na 30 g směsi.');
+    }
+    if(tg==='h'){
+      const light = lv>=6 ? 'SV.HN.KH' : 'STŘ.HN.KH';
+      const dark = lv>=6 ? 'STŘ.HN.KH' : 'TM.HN.KH';
+      if(S<.3){ mixes.push(['Odrost', split(main,[[light,2],[dark,1]])]); }
+      else if(S<.8){ mixes.push(['Odrost', split(main,[[light,4],[dark,2],['CASSIA',1]])]); tips.push('Alternativa s lepším krytím: HENNA + OŘECH KH 2 : 1, nebo KH HAZEL 42 + CB BROWN 8.'); time='60–90 min';}
+      else { pre=['Předpigmentace, 45 min, vysušit', split(r5(main*.8),[['HENNA',1],['ROT INTENSIV',1]])];
+             mixes.push(['Pak odrost', split(main,[[light,2],[dark,1]])]);
+             warns.push('<b>Hnědá přímo na '+pct(S)+' % šedin zezelená.</b> Stalo se 6× (kar. 21, 28, 98, 99). Buď předpigmentace, nebo přimíchat ⅓ henny/červené.');
+             time='45 min + 60–90 min'; }
+    }
+    if(tg==='r'){
+      if(S<.3) mixes.push(['Odrost', lv>=6? split(main,[['S13',2],['JAHODA',1]]) : 'JAHODA '+main+' g']);
+      else if(S<.7) mixes.push(['Odrost', split(main,[['JAHODA',2],['HENNA',1]])]);
+      else mixes.push(['Odrost', split(main,[['ROT INTENSIV',2],['ST.HN.KH',1]])]);
+      tips.push('Moc výrazné? Jahoda 15 + HAJ 3 + NA06 6 g (kar. 256), nebo ubrat hennu.');
+    }
+    if(tg==='t'){
+      if(S>=.5){ pre=['Předpigmentace, 45 min', split(r5(main*.8),[['HENNA',1],['ROT INTENSIV',1]])];
+                 mixes.push(['Pak odrost', split(main,[['ČERNÁ CB',3],['INDIGO',1]])]); time='45 min + 90 min'; }
+      else mixes.push(['Odrost', split(main,[['TM.HN.KH',4],['INDIGO CB',3]])]);
+      tips.push('Tmavá s fialovým nádechem: TM.HNĚDÁ 25 + VIOLET 5 g, nechat až 3 h.');
+    }
+
+    if(lenG){
+      const lenMix = hist==='o' ? 'NEUTRAL / CASSIA '+lenG+' g + zbytek směsi' : 'zbytek směsi + CASSIA '+lenG+' g';
+      mixes.push(['Délky', lenMix,'len']);
+    }
+    if(hist==='c'){ warns.push('<b>Tmavá chemie v délkách:</b> barvit jen odrost a délky nechat vymýt. Na délky spíš henna nebo červená než hnědá.'); }
+    if(hist==='o'){ tips.push('Odbarvené délky berou hodně a můžou zezelenat. Do délek jen neutral nebo světlá s cassií.'); }
+    if(hist==='x' && (tg==='b'||tg==='s')){ warns.push('<b>Přes hennu do světla nejde.</b> Zesvětlovat jen odrost a délky postupně stříhat.'); }
+    if(hist==='x' && (tg==='h'||tg==='t')){ tips.push('Přes hennu ztmavíš OŘECHEM + MED.BROWN 30 : 20 (kar. 250).'); }
+    if(dens==='j'){ tips.push('Jemné vlasy u obličeje berou víc: na skráně směs + cassia 1 : 1.'); }
+    if(dens==='h'){ time = time==='60 min' ? '60–90 min, pod sušákem' : time; }
+
+    const total = main + lenG + (pre? +pre[1].match(/\d+/g).reduce((a,b)=>a+ +b,0) : 0);
+    let html='<span class="eyebrow">Orientační směs</span>';
+    html+='<div class="total"><span class="big mono">'+total+' g</span><small>celkem · působení '+time+'</small></div>';
+    html+='<div class="mixes">';
+    if(pre) html+='<div class="mix pre"><h4>'+pre[0]+'</h4><div class="line">'+pre[1]+'</div></div>';
+    mixes.forEach(m=>{html+='<div class="mix'+(m[2]?' len':'')+'"><h4>'+m[0]+'</h4><div class="line">'+m[1]+'</div></div>'});
+    html+='</div>';
+    warns.forEach(w=>html+='<div class="warn">'+w+'</div>');
+    tips.forEach(t=>html+='<div class="tip">'+t+'</div>');
+    html+='<div class="formula">G = Z × k (+ D) = '+Z+' × '+k+(lenG?' + '+lenG:'')+' ≈ '+(main+lenG)+' g\n'+
+      't = 1 − S   vpředu: '+pct(tFront)+' % tmavší · vzadu: '+pct(tBack)+' % tmavší</div>';
+    html+='<p class="note">Čísla jsou střed toho, co je na kartách. U nové klientky začni spíš světleji a méně, výraznost se přidává snáz než ubírá.</p>';
+    out.innerHTML=html;
+  }
+  f.addEventListener('input',calc); f.addEventListener('change',calc);
+  f.addEventListener('submit',e=>e.preventDefault());
+  calc();
+})();
+</script>
+
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}</script>
+</body>
+</html>
