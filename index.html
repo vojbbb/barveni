@@ -7,470 +7,72 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Barvení">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#2f3f8f">
+<meta name="robots" content="noindex,nofollow">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
-<style>html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: kalkulačka nahoře (vstup vlevo, výsledek vpravo), pod ní pravidla jako číslovaný sešit karet, tabulka receptů a zkratky. */
-:root{
-  --bg:#f6f7f4; --surface:#ffffff; --fg:#1d2420; --muted:#5d6862; --line:#d9ded8;
-  --indigo:#2f3f8f; --indigo-soft:#e6e9f6; --cassia:#9a7b12; --cassia-soft:#f6efd6;
-  --henna:#a4432a; --henna-soft:#f7e4dd; --ok:#2f7a4d;
-  --f-display:"Young Serif", Georgia, serif;
-  --f-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
-  color-scheme:light;
-}
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#141917; --surface:#1c2320; --fg:#e7ebe8; --muted:#9aa6a0; --line:#2f3934;
-  --indigo:#9fb0ff; --indigo-soft:#232a4a; --cassia:#e2c25a; --cassia-soft:#352d12;
-  --henna:#f0957a; --henna-soft:#3c2219; --ok:#7fd3a0; color-scheme:dark }}
-:root[data-theme="dark"]{
-  --bg:#141917; --surface:#1c2320; --fg:#e7ebe8; --muted:#9aa6a0; --line:#2f3934;
-  --indigo:#9fb0ff; --indigo-soft:#232a4a; --cassia:#e2c25a; --cassia-soft:#352d12;
-  --henna:#f0957a; --henna-soft:#3c2219; --ok:#7fd3a0; color-scheme:dark }
+:root{--bg:#f6f7f4;--surface:#fff;--fg:#1d2420;--muted:#5d6862;--line:#d9ded8;--accent:#2f3f8f;--err:#a4432a;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#141917;--surface:#1c2320;--fg:#e7ebe8;--muted:#9aa6a0;--line:#2f3934;--accent:#9fb0ff;--err:#f0957a;color-scheme:dark}}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55;padding-inline:16px;padding-block:28px 64px}
-.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
-h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0;line-height:1.2}
-h1{font-size:clamp(28px,4.5vw,42px)}
-h2{font-size:26px}
-h3{font-size:19px}
-p{margin:0}
-.lede{color:var(--muted);max-width:68ch;margin-top:10px}
-.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--indigo)}
-.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-header{display:flex;flex-direction:column;gap:6px}
-.stats{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:14px;font-size:14px;color:var(--muted)}
-.stats b{color:var(--fg);font-family:var(--f-mono);font-weight:500}
-
-/* calculator */
-.calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start}
-@media (max-width:820px){.calc{grid-template-columns:minmax(0,1fr)}}
-.panel{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px}
-form{display:flex;flex-direction:column;gap:16px}
-fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;min-width:0}
-legend,label.lbl{font-size:13px;font-weight:600;color:var(--muted);padding:0;margin-bottom:4px}
-.seg{display:flex;flex-wrap:wrap;gap:6px}
-.seg input{position:absolute;opacity:0;pointer-events:none}
-.seg label{border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:14px;cursor:pointer;background:var(--bg);user-select:none}
-.seg input:checked+label{background:var(--indigo);border-color:var(--indigo);color:var(--surface)}
-.seg input:focus-visible+label{outline:2px solid var(--indigo);outline-offset:2px}
-.range{display:flex;align-items:center;gap:10px}
-.range input{flex:1;accent-color:var(--indigo)}
-.range output{width:48px;text-align:right}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media (max-width:440px){.two{grid-template-columns:1fr}}
-
-.result{display:flex;flex-direction:column;gap:16px}
-.total{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.total .big{font-family:var(--f-display);font-size:44px;line-height:1}
-.total small{color:var(--muted)}
-.mixes{display:flex;flex-direction:column;gap:10px}
-.mix{border-left:3px solid var(--indigo);padding:6px 0 6px 12px}
-.mix.len{border-color:var(--cassia)}
-.mix.pre{border-color:var(--henna)}
-.mix h4{margin:0 0 4px;font-size:14px;font-weight:600}
-.mix .line{font-family:var(--f-mono);font-size:14px}
-.warn{background:var(--henna-soft);color:var(--fg);border-radius:8px;padding:10px 12px;font-size:14px}
-.warn b{color:var(--henna)}
-.tip{background:var(--cassia-soft);border-radius:8px;padding:10px 12px;font-size:14px}
-.formula{background:var(--indigo-soft);border-radius:8px;padding:12px 14px;font-family:var(--f-mono);font-size:13px;overflow-x:auto;white-space:pre}
-.note{font-size:13px;color:var(--muted)}
-
-/* rules */
-.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-@media (max-width:820px){.rules{grid-template-columns:minmax(0,1fr)}}
-.rule{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0}
-.rule .num{font-family:var(--f-mono);font-size:12px;color:var(--indigo)}
-.rule ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
-.rule li{max-width:65ch}
-.ref{font-family:var(--f-mono);font-size:12px;color:var(--muted);white-space:nowrap}
-.eq{font-family:var(--f-mono);font-size:13.5px;background:var(--indigo-soft);border-radius:6px;padding:8px 10px;overflow-x:auto;white-space:pre}
-
-.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
-table{border-collapse:collapse;width:100%;font-size:14px;min-width:720px}
-th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--bg)}
-tr:last-child td{border-bottom:0}
-td.m{font-family:var(--f-mono);font-size:13px;white-space:nowrap}
-.chip{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;background:var(--indigo-soft);color:var(--indigo);white-space:nowrap}
-.chip.h{background:var(--henna-soft);color:var(--henna)}
-.chip.c{background:var(--cassia-soft);color:var(--cassia)}
-
-dl.abbr{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,1fr);gap:6px 16px;margin:0;font-size:14px}
-dl.abbr dt{overflow-wrap:anywhere;font-family:var(--f-mono);font-weight:500}
-dl.abbr dd{overflow-wrap:anywhere;margin:0;color:var(--muted)}
-section{display:flex;flex-direction:column;gap:16px}
-@media (max-width:480px){dl.abbr{grid-template-columns:minmax(0,1fr)}dl.abbr dd{margin-bottom:6px}}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;align-items:center;justify-content:center;padding:16px}
+form{width:100%;max-width:340px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:26px 22px;display:flex;flex-direction:column;gap:14px}
+img{width:64px;height:64px;border-radius:14px;align-self:center}
+h1{margin:0;font-size:20px;text-align:center;font-weight:600}
+p{margin:0;color:var(--muted);font-size:14px;text-align:center}
+label{font-size:13px;font-weight:600;color:var(--muted)}
+input[type=password]{width:100%;font-size:17px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
+input[type=password]:focus{outline:2px solid var(--accent);outline-offset:1px}
+.rem{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--fg);font-weight:400}
+.rem input{width:20px;height:20px;accent-color:var(--accent)}
+button{font-size:17px;font-weight:600;padding:12px;border:0;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer}
+button:disabled{opacity:.6}
+#err{color:var(--err);font-size:14px;text-align:center;min-height:1em}
 </style>
-
-
 </head>
 <body>
-<div class="wrap">
-<header>
-  <span class="eyebrow">Výtah z karet klientek · přírodní barvy</span>
+<form id="f" hidden autocomplete="on">
+  <img src="apple-touch-icon.png" alt="">
   <h1>Pravidla přírodního barvení</h1>
-  <p class="lede">Z každé karty je vypsaný výchozí stav vlasů, směs, poměr, gramy, výsledek a poznámka „příště“. Pravidla níže jsou to, co se opakuje napříč klientkami. Kalkulačka z nich skládá orientační směs. Je to souhrn praxe z karet, ne náhrada úsudku u křesla.</p>
-  <div class="stats">
-    <span><b>260</b> fotek karet</span>
-    <span><b>100+</b> klientek</span>
-    <span><b>2014–2026</b> zápisy</span>
-  </div>
-</header>
-
-<section aria-labelledby="calc-h">
-  <h2 id="calc-h">Kalkulačka směsi</h2>
-  <div class="calc">
-    <div class="panel">
-      <form id="f" autocomplete="off">
-        <fieldset><legend>Délka vlasů</legend>
-          <div class="seg">
-            <input type="radio" name="len" id="len-k" value="k"><label for="len-k">krátké / pixie</label>
-            <input type="radio" name="len" id="len-m" value="m" checked><label for="len-m">mikádo / po ramena</label>
-            <input type="radio" name="len" id="len-d" value="d"><label for="len-d">dlouhé</label>
-          </div></fieldset>
-        <fieldset><legend>Hustota a struktura</legend>
-          <div class="seg">
-            <input type="radio" name="dens" id="dens-j" value="j"><label for="dens-j">jemné / řídké</label>
-            <input type="radio" name="dens" id="dens-n" value="n" checked><label for="dens-n">normální</label>
-            <input type="radio" name="dens" id="dens-h" value="h"><label for="dens-h">husté / hrubé</label>
-          </div></fieldset>
-        <fieldset><legend>Co se barví</legend>
-          <div class="seg">
-            <input type="radio" name="scope" id="sc-o" value="o"><label for="sc-o">jen odrost</label>
-            <input type="radio" name="scope" id="sc-od" value="od" checked><label for="sc-od">odrost + délky</label>
-            <input type="radio" name="scope" id="sc-c" value="c"><label for="sc-c">celé vlasy</label>
-          </div></fieldset>
-        <div class="two">
-          <fieldset><label class="lbl" for="gf">Šediny vpředu / temeno</label>
-            <div class="range"><input type="range" id="gf" min="0" max="100" step="10" value="80"><output id="gfo" class="mono" for="gf">80 %</output></div></fieldset>
-          <fieldset><label class="lbl" for="gb">Šediny vzadu / spodek</label>
-            <div class="range"><input type="range" id="gb" min="0" max="100" step="10" value="50"><output id="gbo" class="mono" for="gb">50 %</output></div></fieldset>
-        </div>
-        <fieldset><label class="lbl" for="lv">Vlastní tmavost (bez šedin)</label>
-          <div class="range"><input type="range" id="lv" min="2" max="9" step="1" value="5"><output id="lvo" class="mono" for="lv">5</output></div></fieldset>
-        <fieldset><legend>Cíl</legend>
-          <div class="seg">
-            <input type="radio" name="tg" id="tg-b" value="b" checked><label for="tg-b">zlatá blond</label>
-            <input type="radio" name="tg" id="tg-s" value="s"><label for="tg-s">studená / popelavá</label>
-            <input type="radio" name="tg" id="tg-h" value="h"><label for="tg-h">hnědá</label>
-            <input type="radio" name="tg" id="tg-r" value="r"><label for="tg-r">měděná / jahodová</label>
-            <input type="radio" name="tg" id="tg-t" value="t"><label for="tg-t">tmavá / černá</label>
-          </div></fieldset>
-        <fieldset><legend>Předchozí barvení</legend>
-          <div class="seg">
-            <input type="radio" name="hist" id="hi-n" value="n" checked><label for="hi-n">nebarvené / přírodní</label>
-            <input type="radio" name="hist" id="hi-c" value="c"><label for="hi-c">chemie tmavá</label>
-            <input type="radio" name="hist" id="hi-o" value="o"><label for="hi-o">odbarvené / melír</label>
-            <input type="radio" name="hist" id="hi-x" value="x"><label for="hi-x">henna</label>
-          </div></fieldset>
-      </form>
-    </div>
-    <div class="panel result" aria-live="polite" id="out"></div>
-  </div>
-</section>
-
-<section aria-labelledby="eq-h">
-  <h2 id="eq-h">Rovnice, ze kterých kalkulačka počítá</h2>
-  <div class="rules">
-    <div class="rule">
-      <span class="num">ROVNICE 1 · GRAMÁŽ</span>
-      <div class="eq">G = Z × k  (+ D)
-
-Z  jen odrost:      krátké 20 g · ostatní 30 g
-   celé vlasy:      krátké 35 · ramena 45 · dlouhé 65 g
-k  jemné/řídké 0,7 · normální 1 · husté 1,3
-D  délky (zbytek směsi + cassia):
-   krátké +5 · ramena +10 · dlouhé +15–20 g</div>
-      <p class="note">Nejčastější zápis na odrost je 30 g (18×), pak 25 g a 35 g. Velký odrost nebo hodně šedin 50–60 g. „Na dlouhé vlasy +50 g“ (kar. 135), dlouhé husté „90 g!“ (kar. 2), hodně husté mikádo 50 g → „stačí 35 g“ (kar. 206).</p>
-    </div>
-    <div class="rule">
-      <span class="num">ROVNICE 2 · PODÍL TMAVŠÍ SLOŽKY</span>
-      <div class="eq">t = 1 − S      (omezeno na 0 až 0,5)
-
-S  podíl šedin v dané zóně (0,8 = 80 %)
-t  podíl hnědé/tmavší barvy ve směsi
-   zbytek (1 − t) je světlá/zlatá barva</div>
-      <p class="note">Platí pro cestu do světla. Vpředu bílé (S ≈ 1) → čistá světlá (BLONDHELL 03, GOLDBLOND 01). Vzadu 50 % → světlá : hnědá 1 : 1. 80 % → asi 4 : 1, v praxi „špetka sv. hnědé“. Odvozeno ze zónových karet 7, 72–75, 84–91, 176–178, 219–221, 232, 240.</p>
-    </div>
-    <div class="rule">
-      <span class="num">ROVNICE 3 · UTLUMENÍ</span>
-      <div class="eq">barva : neutral (cassia) = 3 : 1  mírně
-                         = 2 : 1  středně
-                         = 1 : 1  skráně, jemné vlasy
-indigo  ≈ 5 % směsi  (2 g na 30 g) proti rezavé</div>
-      <p class="note">Kar. 18 „GOLDEN BL. + NEUTRAL 2:1 – OK“, kar. 120 skráně „2:1 s cassií – OK“, kar. 118 a 119 S13 31 g + indigo 2 g, kar. 213 indigo 2 g na 30 g.</p>
-    </div>
-    <div class="rule">
-      <span class="num">ROVNICE 4 · POSTUPNÉ ZESVĚTLENÍ</span>
-      <div class="eq">každá návštěva:  ¼ hnědé → nahradit světlou/neutralem
-barvit jen odrost, délky nechat vymýt
-3–4 návštěvy na přechod hnědá → zlatá blond</div>
-      <p class="note">Kar. 10 „přidávat ¼ NEUTRAL“, kar. 17–18 sv. hnědá → golden blond → + neutral, kar. 16 golden blond 2:1 → 3:1 → jen golden blond, kar. 192 „postupně přejít“.</p>
-    </div>
-  </div>
-</section>
-
-<section aria-labelledby="r-h">
-  <h2 id="r-h">Pravidla, která se opakují</h2>
-  <div class="rules">
-    <div class="rule">
-      <span class="num">01 · ŠEDINY ROZHODUJÍ O CESTĚ</span>
-      <h3>Čím víc šedin, tím méně jde čistá hnědá</h3>
-      <ul>
-        <li><b>0–10 %</b>: jen tónování a oživení. S13, SAND, JAHODA nebo byliny Khadi. Bez šedin S13 + JAHODA 4 : 3 nebo 35 : 15 g → hezká béžová. <span class="ref">kar. 11, 55</span></li>
-        <li><b>10–30 %</b>: stačí jedna barva nebo 2 složky. SAND 45 + SV.HN.KH 5, HENNA + HAZEL 1 : 1. <span class="ref">kar. 130, 51</span></li>
-        <li><b>50–70 %</b>: hnědá potřebuje základ. KH SV.HN 20 + STŘ.HN 10 (+ cassia 5), KH HAZEL 42 + CB BROWN 8, HENNA + OŘECH 2 : 1. <span class="ref">kar. 40–44, 26, 131–134</span></li>
-        <li><b>80–100 %</b>: buď jít do světla (BLONDHELL 03, GOLDBLOND 01, N09, NA07/NA08 + ocet), nebo nejdřív předpigmentovat hennou. <span class="ref">kar. 225, 189, 183</span></li>
-      </ul>
-    </div>
-    <div class="rule">
-      <span class="num">02 · ZELENÁ NA BÍLÝCH</span>
-      <h3>Hnědá přímo na bílé vlasy zezelená</h3>
-      <ul>
-        <li>Zapsáno 6× „zelené“: hazel, sv. hnědá i ořech + neutral na 80–100 % šedin. <span class="ref">kar. 21, 28, 98, 99, 195</span></li>
-        <li>Řešení: předpigmentace HENNA + ROT INTENSIV 1 : 1, 45 min, pak hnědá/černá + indigo 3 : 1, celkem 1,5 h. „OK, hezky ztmavlo.“ <span class="ref">kar. 183</span></li>
-        <li>Lehčí varianta: přimíchat hennu nebo červenou (~⅓) přímo do hnědé. HENNA 35 + ROT INT 15 „sjednotilo se“. <span class="ref">kar. 28, 20</span></li>
-      </ul>
-    </div>
-    <div class="rule">
-      <span class="num">03 · ZÓNOVÁNÍ</span>
-      <h3>Vpředu světlejší, vzadu stejná směs + hnědá</h3>
-      <ul>
-        <li>Nejčastější vzorec u šedých: vpředu jen světlá složka, vzadu totéž + hnědá 1 : 1 (ZL.HN.KH, SV.HN.KH nebo SAND). <span class="ref">kar. 84–91, 176–177</span></li>
-        <li>U obličeje a na skráních se barva chytá víc: přidat cassii 1 : 1 nebo 2 : 1, nebo „lžička směsi + ½ lžičky cassie“. <span class="ref">kar. 118, 232</span></li>
-        <li>Kruh na temeni nebo tmavá spodní část zvlášť: NA06 jen tam. <span class="ref">kar. 116, 90</span></li>
-        <li>Šedé pruhy vpředu: stačí barvit jen „křídla“, ne celou hlavu. <span class="ref">kar. 240</span></li>
-      </ul>
-    </div>
-    <div class="rule">
-      <span class="num">04 · DÉLKY</span>
-      <h3>Na délky jde zbytek směsi s cassií</h3>
-      <ul>
-        <li>Standard: odrost barvou, do délek zbytek + CASSIA 10–15 g (dlouhé až 20 g). Cassia dává lesk bez barvy. <span class="ref">kar. 22, 40, 207, 260</span></li>
-        <li>Když jsou délky moc výrazné nebo tmavé: několik návštěv jen odrost a nechat vymýt. <span class="ref">kar. 118, 223</span></li>
-        <li>Po létě a moři vyšisované: tehdy znovu celé vlasy. <span class="ref">kar. 76, 178, 201</span></li>
-        <li>Odbarvené a melírované délky berou moc. Na ně neutral nebo světlá + cassia. <span class="ref">kar. 203, 108</span></li>
-      </ul>
-    </div>
-    <div class="rule">
-      <span class="num">05 · KOREKCE PODLE VÝSLEDKU</span>
-      <h3>Co dělat, když to vyšlo jinak</h3>
-      <ul>
-        <li><b>Moc výrazné / oranžové</b>: přidat neutral nebo cassii, ubrat hennu, přidat hnědou. HENNA + ROT 4 : 1 → HENNA 30 + BLOND 5. <span class="ref">kar. 209</span></li>
-        <li><b>Rezavé</b>: špetka indiga, jen v horní polovině. <span class="ref">kar. 231</span></li>
-        <li><b>Do růžova</b> po NA06 + ocet na bílých → přejít na NA07. <span class="ref">kar. 187, 89</span></li>
-        <li><b>Málo výrazné</b>: přidat jahodu, henna nebo ROT, prodloužit čas. Tm. hnědá + violet 3 h místo 1 h. <span class="ref">kar. 247</span></li>
-        <li><b>Moc zlaté</b>: k GOLDBLOND 01 přidat BLONDHELL 03 (1 : 2) nebo N09 (2 : 1). <span class="ref">kar. 197, 199</span></li>
-      </ul>
-    </div>
-    <div class="rule">
-      <span class="num">06 · STRUKTURA VLASŮ</span>
-      <h3>Jemné berou víc, husté potřebují víc gramů</h3>
-      <ul>
-        <li>Velmi jemné a krátké: stačí 15 g, vpředu „svítí“, proto utlumit tmavší nebo cassií. <span class="ref">kar. 129, 160, 182</span></li>
-        <li>Husté a hrubé: víc gramů a delší působení, často pod sušákem. <span class="ref">kar. 2, 206, 123</span></li>
-        <li>Méně vlasů (vypadávání) = méně barvy: 40 g → 30 g. <span class="ref">kar. 162</span></li>
-        <li>Mastné vlasy: byliny Khadi. Suché konce: cassia a olej, ne henna. <span class="ref">kar. 180, 12</span></li>
-      </ul>
-    </div>
-    <div class="rule">
-      <span class="num">07 · TEPLÁ × STUDENÁ</span>
-      <h3>Studenou dělá popel, indigo a ocet</h3>
-      <ul>
-        <li>Studená hnědá: ASH BROWN (+ cassia 3 : 1), BRAUN 120 + NA06 2 : 1, BRAUN 120 + GOLD.BR.KH 30 : 5. <span class="ref">kar. 236, 249, 222</span></li>
-        <li>Studená světlá na šedinách: NA07 nebo NA08 + ocet. „Hezká studená“ BLONDHELL 03. <span class="ref">kar. 223, 225, 244</span></li>
-        <li>Teplá: GOLDBLOND, SUNRISE, JAHODA, COPPER, henna. „Chytlo do studena → příště teplejší GOLDBLOND.“ <span class="ref">kar. 68</span></li>
-      </ul>
-    </div>
-    <div class="rule">
-      <span class="num">08 · PŘEDCHOZÍ CHEMIE</span>
-      <h3>Z chemie přes hennu, odrost zvlášť</h3>
-      <ul>
-        <li>Tmavá chemie v délkách: barvit jen odrost, délky nechat vymýt. Na délky hennu nebo červenou, ne hnědou. <span class="ref">kar. 12, 28, 33</span></li>
-        <li>Fialová nebo černá chemie + 80 % šedin: TM.HN.KH 18 + ROT INT 12 + ČERNÁ 5, délky GOLD-KUPF 20 + CASSIA 10, celkem 70 g. <span class="ref">kar. 33</span></li>
-        <li>Ztmavení přes hennu: OŘECH 30 + MED.BROWN 20 „hezky ztmavlo“, občas znovu předpigmentovat hennou. <span class="ref">kar. 250</span></li>
-      </ul>
-    </div>
-    <div class="rule">
-      <span class="num">09 · ČAS A DOMÁCÍ BARVENÍ</span>
-      <h3>Hodina je základ, šediny a tmavé déle</h3>
-      <ul>
-        <li>Běžně 1 h, golden blond 1–1,5 h, tmavá + violet na krytí až 3 h, předpigmentace 45 min. <span class="ref">kar. 18, 246, 247, 183</span></li>
-        <li>„Doma nechytlo“ = nedala kondicionér k hlavě, umyla vlasy barevným šamponem nebo nechala krátce. <span class="ref">kar. 16, 79, 190</span></li>
-        <li>Domů dávat stejnou směs jen na odrost, 30–50 g. <span class="ref">kar. 204–207</span></li>
-      </ul>
-    </div>
-    <div class="rule">
-      <span class="num">10 · ALERGIE A POKOŽKA</span>
-      <h3>Svědění si zapisovat</h3>
-      <ul>
-        <li>Svědění po barvě se opakovalo u S13, měděné hnědé CB, KH tm. hnědé. Pomohl olej 2 týdny, u jedné klientky ořechové tonikum. <span class="ref">kar. 80, 83, 191</span></li>
-        <li>Alergie na pšenici a žito: pozor na barvy Oliebe. <span class="ref">kar. 161</span></li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<section aria-labelledby="t-h">
-  <h2 id="t-h">Osvědčené směsi podle situace</h2>
-  <div class="tablewrap">
-    <table>
-      <thead><tr><th>Výchozí stav</th><th>Cíl</th><th>Směs</th><th>Poměr / gramy</th><th>Karta</th></tr></thead>
-      <tbody>
-        <tr><td>přír. 6, bez šedin, jemné</td><td><span class="chip">béžová</span></td><td>S13 + JAHODA</td><td class="m">35 + 15 g</td><td class="m">55</td></tr>
-        <tr><td>tm. 4–5, 20 % šedin, nebarvené</td><td><span class="chip">zlatohnědá</span></td><td>SAND + SV.HN.KH</td><td class="m">45 + 5 g</td><td class="m">130</td></tr>
-        <tr><td>tm. 4, 50 % šedin, chemie</td><td><span class="chip">hnědá</span></td><td>MĚĎ.HNĚDÁ + VIOLET</td><td class="m">25 + 10 g</td><td class="m">36</td></tr>
-        <tr><td>dlouhé, 70 % šedin, dříve henna</td><td><span class="chip">hnědá</span></td><td>KH HAZEL + CB BROWN</td><td class="m">42 + 8 g</td><td class="m">26</td></tr>
-        <tr><td>šediny, sv. hnědá (dlouhodobě)</td><td><span class="chip">hnědá</span></td><td>KH SV.HN + KH STŘ.HN (+ CASSIA)</td><td class="m">20 + 10 (+5) g</td><td class="m">40–44</td></tr>
-        <tr><td>vpředu bílé, vzadu 50 %</td><td><span class="chip c">zlatá blond</span></td><td>vpředu GOLDBLOND 01 · vzadu GB 01 + ZL.HN.KH</td><td class="m">15 g · 10 + 10 g</td><td class="m">85–86</td></tr>
-        <tr><td>vpředu bílé, vzadu 50 %</td><td><span class="chip c">světlá</span></td><td>vpředu BLONDHELL 03 · vzadu BLHELL 03 + SAND</td><td class="m">10 g · 1 : 1</td><td class="m">176–177</td></tr>
-        <tr><td>100 % šedin po chemoterapii, krátké</td><td><span class="chip">studená světlá</span></td><td>NA08 + ocet</td><td class="m">20 g celé</td><td class="m">225</td></tr>
-        <tr><td>80 % šedin, chem. černá, dlouhé</td><td><span class="chip">tmavá</span></td><td>předpig. HENNA + ROT INT → ČERNÁ + INDIGO</td><td class="m">1 : 1 · 3 : 1</td><td class="m">183</td></tr>
-        <tr><td>šediny, chce měď</td><td><span class="chip h">měděná</span></td><td>ROT INTENSIV + ST.HN.KH</td><td class="m">24 + 11 g (2 : 1)</td><td class="m">205</td></tr>
-        <tr><td>odrost, chce jahodovou</td><td><span class="chip h">jahodová</span></td><td>JAHODA + HENNA</td><td class="m">2 : 1 až 1 : 1 (30 g)</td><td class="m">111–113</td></tr>
-        <tr><td>jahodová byla moc výrazná</td><td><span class="chip h">jahodová tlumená</span></td><td>JAHODA + HAJ + NA06</td><td class="m">15 + 3 + 6 g</td><td class="m">254, 256</td></tr>
-        <tr><td>tmavé, vyšisované</td><td><span class="chip">tmavá</span></td><td>TM.HNĚDÁ + VIOLET, 3 h</td><td class="m">25 + 5 g</td><td class="m">247</td></tr>
-        <tr><td>tmavá, chce tmavší</td><td><span class="chip">tmavá</span></td><td>TM.HN.KH + INDIGO CB</td><td class="m">20 + 15 g</td><td class="m">170</td></tr>
-        <tr><td>50 % šedin, studená</td><td><span class="chip">studená hnědá</span></td><td>BRAUN 120 + GOLD.BR.KH</td><td class="m">30 + 5 g</td><td class="m">222</td></tr>
-        <tr><td>odrost vs. černé konce</td><td><span class="chip">studená hnědá</span></td><td>ASH BROWN + BRAUN 120 + CASSIA</td><td class="m">20 + 10 + 10 g</td><td class="m">235</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<section aria-labelledby="a-h">
-  <h2 id="a-h">Zkratky z karet</h2>
-  <div class="panel">
-    <dl class="abbr">
-      <dt>KH</dt><dd>Khadi (SV.HN, STŘ.HN, TM.HN, OŘECH, HAZEL, ASH BROWN, ZL.HN, MĚDĚNÁ, SLUNEČNÍ BL, CASSIA, HENNA, INDIGO, BYLINY)</dd>
-      <dt>CB, CSMB</dt><dd>Cosmebio (GOLDEN BLOND, TM.HN, ČERNÁ, INDIGO, COPPER BROWN, VIOLET)</dd>
-      <dt>O, OL</dt><dd>Oliebe (GOLDBLOND 01, BLOND 02, BLONDHELL 03, GOLD A05, N07, N09, NA06–NA08)</dd>
-      <dt>S12, S13, SAND, JAHODA, BRAUN 110/120, 11M</dt><dd>označení tak, jak jsou psaná na kartách</dd>
-      <dt>HAJ, H+A</dt><dd>henna + amla (+ jahoda), podle kontextu</dd>
-      <dt>F, DIFU</dt><dd>foukaná, difuzér</dd>
-    </dl>
-    <p class="note" style="margin-top:12px">Pár slov na kartách bylo nečitelných, ta v pravidlech nejsou. Jména a telefony klientek tu nejsou, odkazy „kar.“ jsou čísla fotek v pořadí, jak jdou časově ve složce.</p>
-  </div>
-</section>
-</div>
-
+  <p>Zadej heslo kadeřnictví</p>
+  <div><label for="pw">Heslo</label>
+  <input type="password" id="pw" name="password" autocomplete="current-password" required></div>
+  <label class="rem"><input type="checkbox" id="rem" checked> Zapamatovat toto zařízení</label>
+  <button type="submit" id="go">Přihlásit</button>
+  <div id="err" role="alert"></div>
+</form>
 <script>
-(function(){
-  const f=document.getElementById('f'), out=document.getElementById('out');
-  const v=n=>{const el=f.querySelector('input[name="'+n+'"]:checked');return el?el.value:null};
-  const r5=x=>Math.max(5,Math.round(x/5)*5);
-  const pct=x=>Math.round(x*100);
-  function split(total, parts){ // parts: [[name, weight],...]
-    const sum=parts.reduce((a,p)=>a+p[1],0);
-    return parts.map(p=>p[0]+' '+Math.max(1,Math.round(total*p[1]/sum))+' g').join(' + ');
-  }
-  function calc(){
-    const len=v('len'), dens=v('dens'), scope=v('scope'), tg=v('tg'), hist=v('hist');
-    const gf=+document.getElementById('gf').value/100, gb=+document.getElementById('gb').value/100;
-    const lv=+document.getElementById('lv').value;
-    document.getElementById('gfo').textContent=pct(gf)+' %';
-    document.getElementById('gbo').textContent=pct(gb)+' %';
-    document.getElementById('lvo').textContent=lv;
-    const k={j:.7,n:1,h:1.3}[dens];
-    let Z, D=0;
-    if(scope==='c'){Z={k:35,m:45,d:65}[len]}
-    else{Z=len==='k'?20:30; if(scope==='od'){D={k:5,m:10,d:17.5}[len]}}
-    const main=r5(Z*k), lenG=D?r5(D*(dens==='h'?1.3:1)):0;
-    const S=Math.max(gf,gb), zoned=Math.abs(gf-gb)>=0.3;
-    const warns=[], tips=[], mixes=[];
-    let pre=null, time='60 min';
-
-    const tFront=Math.min(.5,Math.max(0,1-gf)), tBack=Math.min(.5,Math.max(0,1-gb));
-    if(tg==='b'){
-      const light = S>=.7 ? 'BLONDHELL 03' : 'GOLDBLOND 01';
-      const dark = lv<=4 ? 'ZL.HN.KH' : 'SAND';
-      if(zoned){
-        const fg=r5(main*.45), bg=main-fg;
-        mixes.push(['Vpředu / temeno', tFront<.08? light+' '+fg+' g' : split(fg,[[light,1-tFront],[dark,tFront]])]);
-        mixes.push(['Vzadu / spodek', split(bg,[[light,1-tBack],[dark,tBack]])]);
-      } else {
-        const t=Math.min(.5,Math.max(0,1-S));
-        mixes.push(['Odrost', t<.08? light+' '+main+' g' : split(main,[[light,1-t],[dark,t]])]);
-      }
-      if(lv<=4 && S<.5) warns.push('<b>Přírodní barva nezesvětlí.</b> Na tmavé 3–4 golden blond jen dodá zlatý odlesk. Zesvětlovat postupně a barvit jen odrost.');
-      if(S>=.7) tips.push('Když vyjde moc do zlata, přidej BLONDHELL 03 (GB 01 : BH 03 = 1 : 2) nebo N09 (2 : 1).');
-    }
-    if(tg==='s'){
-      if(S>=.7 && lv>=5){
-        mixes.push(['Odrost', (S>=.9?'NA07':'NA07 + NA06 2 : 1')+' + lžíce octa, '+main+' g']);
-        warns.push('<b>NA06 + ocet na bílých šlo do růžova</b> (kar. 187). Na čistě bílé začni NA07 nebo NA08.');
-      } else if(lv<=5){
-        mixes.push(['Odrost', split(main,[['ASH BROWN KH',3],['CASSIA',1]])]);
-        tips.push('Hnědá studená bez popele: BRAUN 120 + NA06 2 : 1, nebo BRAUN 120 30 g + GOLD.BR.KH 5 g.');
-      } else {
-        mixes.push(['Odrost', split(main,[['BLONDHELL 03',2],['N09',1]])]);
-      }
-      tips.push('Rezavý nádech ztlumí špetka indiga, asi 2 g na 30 g směsi.');
-    }
-    if(tg==='h'){
-      const light = lv>=6 ? 'SV.HN.KH' : 'STŘ.HN.KH';
-      const dark = lv>=6 ? 'STŘ.HN.KH' : 'TM.HN.KH';
-      if(S<.3){ mixes.push(['Odrost', split(main,[[light,2],[dark,1]])]); }
-      else if(S<.8){ mixes.push(['Odrost', split(main,[[light,4],[dark,2],['CASSIA',1]])]); tips.push('Alternativa s lepším krytím: HENNA + OŘECH KH 2 : 1, nebo KH HAZEL 42 + CB BROWN 8.'); time='60–90 min';}
-      else { pre=['Předpigmentace, 45 min, vysušit', split(r5(main*.8),[['HENNA',1],['ROT INTENSIV',1]])];
-             mixes.push(['Pak odrost', split(main,[[light,2],[dark,1]])]);
-             warns.push('<b>Hnědá přímo na '+pct(S)+' % šedin zezelená.</b> Stalo se 6× (kar. 21, 28, 98, 99). Buď předpigmentace, nebo přimíchat ⅓ henny/červené.');
-             time='45 min + 60–90 min'; }
-    }
-    if(tg==='r'){
-      if(S<.3) mixes.push(['Odrost', lv>=6? split(main,[['S13',2],['JAHODA',1]]) : 'JAHODA '+main+' g']);
-      else if(S<.7) mixes.push(['Odrost', split(main,[['JAHODA',2],['HENNA',1]])]);
-      else mixes.push(['Odrost', split(main,[['ROT INTENSIV',2],['ST.HN.KH',1]])]);
-      tips.push('Moc výrazné? Jahoda 15 + HAJ 3 + NA06 6 g (kar. 256), nebo ubrat hennu.');
-    }
-    if(tg==='t'){
-      if(S>=.5){ pre=['Předpigmentace, 45 min', split(r5(main*.8),[['HENNA',1],['ROT INTENSIV',1]])];
-                 mixes.push(['Pak odrost', split(main,[['ČERNÁ CB',3],['INDIGO',1]])]); time='45 min + 90 min'; }
-      else mixes.push(['Odrost', split(main,[['TM.HN.KH',4],['INDIGO CB',3]])]);
-      tips.push('Tmavá s fialovým nádechem: TM.HNĚDÁ 25 + VIOLET 5 g, nechat až 3 h.');
-    }
-
-    if(lenG){
-      const lenMix = hist==='o' ? 'NEUTRAL / CASSIA '+lenG+' g + zbytek směsi' : 'zbytek směsi + CASSIA '+lenG+' g';
-      mixes.push(['Délky', lenMix,'len']);
-    }
-    if(hist==='c'){ warns.push('<b>Tmavá chemie v délkách:</b> barvit jen odrost a délky nechat vymýt. Na délky spíš henna nebo červená než hnědá.'); }
-    if(hist==='o'){ tips.push('Odbarvené délky berou hodně a můžou zezelenat. Do délek jen neutral nebo světlá s cassií.'); }
-    if(hist==='x' && (tg==='b'||tg==='s')){ warns.push('<b>Přes hennu do světla nejde.</b> Zesvětlovat jen odrost a délky postupně stříhat.'); }
-    if(hist==='x' && (tg==='h'||tg==='t')){ tips.push('Přes hennu ztmavíš OŘECHEM + MED.BROWN 30 : 20 (kar. 250).'); }
-    if(dens==='j'){ tips.push('Jemné vlasy u obličeje berou víc: na skráně směs + cassia 1 : 1.'); }
-    if(dens==='h'){ time = time==='60 min' ? '60–90 min, pod sušákem' : time; }
-
-    const total = main + lenG + (pre? +pre[1].match(/\d+/g).reduce((a,b)=>a+ +b,0) : 0);
-    let html='<span class="eyebrow">Orientační směs</span>';
-    html+='<div class="total"><span class="big mono">'+total+' g</span><small>celkem · působení '+time+'</small></div>';
-    html+='<div class="mixes">';
-    if(pre) html+='<div class="mix pre"><h4>'+pre[0]+'</h4><div class="line">'+pre[1]+'</div></div>';
-    mixes.forEach(m=>{html+='<div class="mix'+(m[2]?' len':'')+'"><h4>'+m[0]+'</h4><div class="line">'+m[1]+'</div></div>'});
-    html+='</div>';
-    warns.forEach(w=>html+='<div class="warn">'+w+'</div>');
-    tips.forEach(t=>html+='<div class="tip">'+t+'</div>');
-    html+='<div class="formula">G = Z × k (+ D) = '+Z+' × '+k+(lenG?' + '+lenG:'')+' ≈ '+(main+lenG)+' g\n'+
-      't = 1 − S   vpředu: '+pct(tFront)+' % tmavší · vzadu: '+pct(tBack)+' % tmavší</div>';
-    html+='<p class="note">Čísla jsou střed toho, co je na kartách. U nové klientky začni spíš světleji a méně, výraznost se přidává snáz než ubírá.</p>';
-    out.innerHTML=html;
-  }
-  f.addEventListener('input',calc); f.addEventListener('change',calc);
-  f.addEventListener('submit',e=>e.preventDefault());
-  calc();
+var P={"s": "k8Wfk1pPUSjzgazXI9ymHA==", "i": "P6HjWDMKL8aI3wbp", "c": "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", "n": 250000}, K='barveni-key';
+function ub(s){var b=atob(s),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
+function bu(a){var s='';a=new Uint8Array(a);for(var i=0;i<a.length;i++)s+=String.fromCharCode(a[i]);return btoa(s)}
+function show(html){document.open();document.write(html);document.close()}
+async function decryptWith(raw){
+  var key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);
+  var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:ub(P.i)},key,ub(P.c));
+  return new TextDecoder().decode(pt);
+}
+async function derive(pw){
+  var base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);
+  return crypto.subtle.deriveBits({name:'PBKDF2',salt:ub(P.s),iterations:P.n,hash:'SHA-256'},base,256);
+}
+(async function(){
+  var saved=null; try{saved=localStorage.getItem(K)}catch(e){}
+  if(saved){ try{ show(await decryptWith(ub(saved))); return }catch(e){ try{localStorage.removeItem(K)}catch(_){} } }
+  var f=document.getElementById('f'); f.hidden=false; document.getElementById('pw').focus();
+  f.addEventListener('submit',async function(ev){
+    ev.preventDefault(); var b=document.getElementById('go'), er=document.getElementById('err');
+    b.disabled=true; b.textContent='Ověřuji…'; er.textContent='';
+    try{
+      var raw=await derive(document.getElementById('pw').value);
+      var html=await decryptWith(raw);
+      if(document.getElementById('rem').checked){ try{localStorage.setItem(K,bu(raw))}catch(e){} }
+      show(html);
+    }catch(e){ er.textContent='Špatné heslo, zkus to znovu.'; b.disabled=false; b.textContent='Přihlásit'; }
+  });
 })();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}
 </script>
-
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}</script>
 </body>
 </html>
